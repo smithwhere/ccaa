@@ -49,7 +49,7 @@
             return;
         }
 
-        if (!window.confirm('确定删除选中的任务及其已下载文件？此操作不可撤销。')) {
+        if (!window.confirm('确定删除选中的任务、已下载文件及任务文件夹（含文件夹内其他内容）？此操作不可撤销。')) {
             return;
         }
 
@@ -84,7 +84,10 @@
                 var deletedFiles = (data.results || []).reduce(function (total, result) {
                     return total + (result.deleted_files || 0);
                 }, 0);
-                window.alert('已删除 ' + data.results.length + ' 个任务及 ' + deletedFiles + ' 个文件。');
+                var deletedFolders = (data.results || []).reduce(function (total, result) {
+                    return total + (result.deleted_folders || 0);
+                }, 0);
+                window.alert('已删除 ' + data.results.length + ' 个任务、' + deletedFiles + ' 个文件及 ' + deletedFolders + ' 个任务文件夹。');
             }
             window.location.reload();
         }).catch(function (error) {
