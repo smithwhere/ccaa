@@ -6,7 +6,7 @@ import json
 import os
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
@@ -63,6 +63,14 @@ def rpc_call(config, method, *args):
     try:
         with urlopen(request, timeout=15) as response:
             result = json.loads(response.read().decode("utf-8"))
+    except HTTPError as error:
+        try:
+            result = json.loads(error.read().decode("utf-8"))
+        except (UnicodeDecodeError, ValueError):
+            raise ApiError("Could not communicate with aria2") from error
+        if "error" in result:
+            raise ApiError("aria2 rejected the operation: " + result["error"].get("message", "request failed")) from error
+        raise ApiError("Could not communicate with aria2") from error
     except (URLError, TimeoutError, ValueError) as error:
         raise ApiError("Could not communicate with aria2") from error
 
