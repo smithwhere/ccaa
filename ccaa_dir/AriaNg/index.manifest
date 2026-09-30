@@ -6,6 +6,7 @@ css/bootstrap-3.4.1.min.css
 css/plugins-ccac6fc3fc.min.css
 js/angular-packages-1.6.10.min.js
 js/aria-ng-da5356c403.min.js
+js/ccaa-trackers.js
 js/bootstrap-3.4.1.min.js
 js/echarts-common-3.8.5.min.js
 js/jquery-3.3.1.min.js
@@ -20,4 +21,4 @@ NETWORK:
 SETTINGS:
 prefer-online
 
-# hash: fa5a7f64f538edccc1eecff90ab96dffcbfa73bf7317501f6f3d3023e3a96b2b
+# CCAA tracker refresh support
