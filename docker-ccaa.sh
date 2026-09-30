@@ -30,7 +30,7 @@ function check(){
 #安装之前的准备
 function setout(){
 	#安装需要的软件
-	apk add curl wget zip tar make bzip2 unzip
+	apk add curl wget zip tar make bzip2 unzip python3
 	#创建临时目录
 	cd
 	mkdir ./ccaa_tmp
@@ -75,6 +75,7 @@ function dealconf(){
 	chmod +x /etc/ccaa/upbt.sh
 	chmod +x ccaa-master/ccaa
 	cp ccaa-master/dccaa /usr/sbin
+	install -m 755 ccaa-master/ccaa_delete_api.py /usr/sbin/ccaa_delete_api.py
 	chmod +x /usr/sbin/dccaa
 	cd
 }
