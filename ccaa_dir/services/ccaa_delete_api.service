@@ -1,0 +1,17 @@
+[Unit]
+Description=CCAA aria2 task and download file deletion API
+After=network.target aria2.service
+
+[Service]
+Type=simple
+User=ccaa
+Group=ccaa
+ExecStart=/usr/bin/python3 /usr/sbin/ccaa_delete_api.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+
