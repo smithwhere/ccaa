@@ -87,12 +87,20 @@ function setting(){
 
 	#获取ip
 	osip=$(curl ipv4.ip.sb)
+	#自动生成10位Aria2 RPC密钥（仅数字和大小写字母）
+	PASS=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 10)
+	if [ "${#PASS}" -ne 10 ]; then
+		echo '生成 Aria2 RPC 密钥失败。' >&2
+		return 1
+	fi
+	secret_b64=$(printf '%s' "${PASS}" | base64 | tr '+/' '-_' | tr -d '=')
+	ariang_rpc_url="http://${osip}:6080/#!/settings/rpc/set?protocol=http&host=${osip}&port=6800&interface=jsonrpc&secret=${secret_b64}"
 	
 	#执行替换操作
 	downpath='/data/ccaaDown'
 	mkdir -p ${downpath}
 	sed -i "s%dir=%dir=${downpath}%g" /etc/ccaa/aria2.conf
-	sed -ir "s/rpc-secret=.*/rpc-secret=$PASS/g" /etc/ccaa/aria2.conf
+	sed -i "s/^rpc-secret=.*/rpc-secret=${PASS}/" /etc/ccaa/aria2.conf
 	#替换filebrowser读取路径
 	sed -i "s%ccaaDown%${downpath}%g" /etc/ccaa/config.json
 	#替换AriaNg服务器链接
@@ -117,6 +125,8 @@ function setting(){
 
 	echo '-------------------------------------------------------------'
 	echo "大功告成，请访问: http://${osip}:6080/"
+	echo '首次自动写入 AriaNg RPC 设置，请打开以下自动配置链接:'
+	echo "${ariang_rpc_url}"
 	echo 'File Browser 用户名:ccaa'
 	echo 'File Browser 密码:admin'
 	echo 'Aria2 RPC 密钥:' $PASS
