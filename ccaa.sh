@@ -39,11 +39,11 @@ function check(){
 function setout(){
 	if [ -e "/usr/bin/yum" ]
 	then
-		yum -y install curl gcc make bzip2 gzip wget unzip tar
+		yum -y install curl gcc make bzip2 gzip wget unzip tar python3
 	else
 		#更新软件，否则可能make命令无法安装
 		sudo apt-get update
-		sudo apt-get install -y curl make bzip2 gzip wget unzip sudo
+		sudo apt-get install -y curl make bzip2 gzip wget unzip sudo python3
 	fi
 	#创建临时目录
 	cd
@@ -110,6 +110,7 @@ function dealconf(){
 	chmod +x /etc/ccaa/upbt.sh
 	chmod +x ccaa-master/ccaa
 	cp ccaa-master/ccaa /usr/sbin
+	install -m 755 ccaa-master/ccaa_delete_api.py /usr/sbin/ccaa_delete_api.py
 	cd
 }
 #自动放行端口
@@ -118,6 +119,7 @@ function chk_firewall(){
 	then
 		iptables -I INPUT -p tcp --dport 6080 -j ACCEPT
 		iptables -I INPUT -p tcp --dport 6081 -j ACCEPT
+		iptables -I INPUT -p tcp --dport 6082 -j ACCEPT
 		iptables -I INPUT -p tcp --dport 6800 -j ACCEPT
 		iptables -I INPUT -p tcp --dport 6998 -j ACCEPT
 		iptables -I INPUT -p tcp --dport 51413 -j ACCEPT
@@ -127,6 +129,7 @@ function chk_firewall(){
 	then
 		firewall-cmd --zone=public --add-port=6080/tcp --permanent
 		firewall-cmd --zone=public --add-port=6081/tcp --permanent
+		firewall-cmd --zone=public --add-port=6082/tcp --permanent
 		firewall-cmd --zone=public --add-port=6800/tcp --permanent
 		firewall-cmd --zone=public --add-port=6998/tcp --permanent
 		firewall-cmd --zone=public --add-port=51413/tcp --permanent
@@ -135,6 +138,7 @@ function chk_firewall(){
 	then
 		sudo ufw allow 6080/tcp
 		sudo ufw allow 6081/tcp
+		sudo ufw allow 6082/tcp
 		sudo ufw allow 6800/tcp
 		sudo ufw allow 6998/tcp
 		sudo ufw allow 51413/tcp
@@ -146,6 +150,7 @@ function del_post() {
 	then
 		sed -i '/^.*6080.*/'d /etc/sysconfig/iptables
 		sed -i '/^.*6081.*/'d /etc/sysconfig/iptables
+		sed -i '/^.*6082.*/'d /etc/sysconfig/iptables
 		sed -i '/^.*6800.*/'d /etc/sysconfig/iptables
 		sed -i '/^.*6998.*/'d /etc/sysconfig/iptables
 		sed -i '/^.*51413.*/'d /etc/sysconfig/iptables
@@ -155,6 +160,7 @@ function del_post() {
 	then
 		firewall-cmd --zone=public --remove-port=6080/tcp --permanent
 		firewall-cmd --zone=public --remove-port=6081/tcp --permanent
+		firewall-cmd --zone=public --remove-port=6082/tcp --permanent
 		firewall-cmd --zone=public --remove-port=6800/tcp --permanent
 		firewall-cmd --zone=public --remove-port=6998/tcp --permanent
 		firewall-cmd --zone=public --remove-port=51413/tcp --permanent
@@ -163,6 +169,7 @@ function del_post() {
 	then
 		sudo ufw delete 6080/tcp
 		sudo ufw delete 6081/tcp
+		sudo ufw delete 6082/tcp
 		sudo ufw delete 6800/tcp
 		sudo ufw delete 6998/tcp
 		sudo ufw delete 51413/tcp
@@ -174,7 +181,7 @@ function add_service() {
 	then
 		cp /etc/ccaa/services/* /etc/systemd/system
 		systemctl daemon-reload
-		systemctl enable aria2.service ccaa_web.service filebrowser.service
+		systemctl enable aria2.service ccaa_web.service filebrowser.service ccaa_delete_api.service
 	fi
 }
 #设置账号密码
@@ -225,6 +232,7 @@ function setting(){
 	nohup sudo -u ccaa /usr/sbin/ccaa_web > /var/log/ccaa_web.log 2>&1 &
 	#运行filebrowser
 	nohup sudo -u ccaa filebrowser -c /etc/ccaa/config.json > /var/log/fbrun.log 2>&1 &
+	nohup sudo -u ccaa /usr/bin/python3 /usr/sbin/ccaa_delete_api.py > /var/log/ccaa_delete_api.log 2>&1 &
 
 	#重置权限
 	chown -R ccaa:ccaa /etc/ccaa/
