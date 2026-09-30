@@ -13,6 +13,7 @@ function del_post() {
 	then
 		sed -i '/^.*6080.*/'d /etc/sysconfig/iptables
 		sed -i '/^.*6081.*/'d /etc/sysconfig/iptables
+		sed -i '/^.*6082.*/'d /etc/sysconfig/iptables
 		sed -i '/^.*6800.*/'d /etc/sysconfig/iptables
 		sed -i '/^.*6998.*/'d /etc/sysconfig/iptables
 		sed -i '/^.*51413.*/'d /etc/sysconfig/iptables
@@ -22,6 +23,7 @@ function del_post() {
 	then
 		firewall-cmd --zone=public --remove-port=6080/tcp --permanent
 		firewall-cmd --zone=public --remove-port=6081/tcp --permanent
+		firewall-cmd --zone=public --remove-port=6082/tcp --permanent
 		firewall-cmd --zone=public --remove-port=6800/tcp --permanent
 		firewall-cmd --zone=public --remove-port=6998/tcp --permanent
 		firewall-cmd --zone=public --remove-port=51413/tcp --permanent
@@ -30,6 +32,7 @@ function del_post() {
 	then
 		sudo ufw delete 6080/tcp
 		sudo ufw delete 6081/tcp
+		sudo ufw delete 6082/tcp
 		sudo ufw delete 6800/tcp
 		sudo ufw delete 6998/tcp
 		sudo ufw delete 51413/tcp
@@ -40,14 +43,17 @@ function del_post() {
 kill -9 $(pgrep 'aria2c')
 kill -9 $(pgrep 'ccaa_web')
 kill -9 $(pgrep 'filebrowser')
+kill -9 $(pgrep -f 'ccaa_delete_api.py')
 kill -9 $(pgrep 'caddy')
 systemctl disable aria2
 systemctl disable ccaa_web
 systemctl disable filebrowser
+systemctl disable ccaa_delete_api
 
 #删除文件
 rm -rf /etc/ccaa
 rm -rf /usr/sbin/ccaa_web
+rm -rf /usr/sbin/ccaa_delete_api.py
 rm -rf /usr/sbin/ccaa
 rm -rf /usr/sbin/ccaa
 rm -rf /usr/bin/aria2c
@@ -58,6 +64,7 @@ rm -rf /etc/ssl/certs/ca-certificates.crt
 rm -rf /etc/systemd/system/aria2.service
 rm -rf /etc/systemd/system/ccaa_web.service
 rm -rf /etc/systemd/system/filebrowser.service
+rm -rf /etc/systemd/system/ccaa_delete_api.service
 
 #删除filebrowser
 rm -rf /usr/sbin/filebrowser
@@ -66,6 +73,7 @@ rm -rf /usr/sbin/filebrowser
 rm -rf /var/log/aria2.log
 rm -rf /var/log/ccaa_web.log
 rm -rf /var/log/fbrun.log
+rm -rf /var/log/ccaa_delete_api.log
 rm -rf /var/log/filebrowser.log
 
 #删除用户和用户组
