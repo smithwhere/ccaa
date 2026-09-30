@@ -5,6 +5,7 @@ import hmac
 import json
 import os
 import re
+import shutil
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -105,6 +106,20 @@ def validate_task_file(path, root):
     return path
 
 
+def task_parent_directory(path, root):
+    """Return a task file's safe parent directory, unless it is the download root."""
+    if not os.path.isabs(path):
+        path = os.path.join(root, path)
+    parent = os.path.abspath(os.path.dirname(path))
+    resolved_parent = os.path.realpath(parent)
+    if parent != resolved_parent or not is_within_root(parent, root):
+        raise ApiError("A task directory is outside the configured download directory or is a symbolic link")
+
+    if parent == root:
+        return None
+    return parent
+
+
 def delete_task_and_files(config, gid):
     task = rpc_call(config, "tellStatus", gid, ["gid", "status", "files"])
     if not isinstance(task, dict) or task.get("gid") != gid:
@@ -113,8 +128,14 @@ def delete_task_and_files(config, gid):
     files = task.get("files") or []
     paths = []
     seen = set()
+    task_directories = set()
     for item in files:
-        path = validate_task_file(item.get("path", ""), config["download_root"])
+        task_path = item.get("path", "")
+        if task_path:
+            directory = task_parent_directory(task_path, config["download_root"])
+            if directory:
+                task_directories.add(directory)
+        path = validate_task_file(task_path, config["download_root"])
         if path and path not in seen:
             paths.append(path)
             seen.add(path)
@@ -142,7 +163,30 @@ def delete_task_and_files(config, gid):
         except OSError as error:
             raise ApiError("The task was removed, but a downloaded file could not be deleted") from error
 
-    return {"gid": gid, "deleted_files": deleted}
+    # Remove only the deepest shared task directory. Never walk up to a broader
+    # directory that could contain downloads belonging to other tasks.
+    deleted_folders = 0
+    if task_directories:
+        try:
+            directory = os.path.commonpath(sorted(task_directories))
+        except ValueError:
+            directory = config["download_root"]
+        try:
+            if (
+                directory != config["download_root"]
+                and not os.path.islink(directory)
+                and os.path.realpath(directory) == directory
+                and is_within_root(directory, config["download_root"])
+                and os.path.isdir(directory)
+            ):
+                shutil.rmtree(directory)
+                deleted_folders += 1
+        except FileNotFoundError:
+            pass
+        except OSError as error:
+            raise ApiError("The task was removed, but its folder could not be deleted") from error
+
+    return {"gid": gid, "deleted_files": deleted, "deleted_folders": deleted_folders}
 
 
 class Handler(BaseHTTPRequestHandler):
