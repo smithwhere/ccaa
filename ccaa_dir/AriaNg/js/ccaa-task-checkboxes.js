@@ -8,7 +8,7 @@
         '#task-table .task-table-body .checkbox.checkbox-hide > input { display: block !important; opacity: 0 !important; width: 20px !important; height: 20px !important; top: 0 !important; left: 0 !important; cursor: pointer; }',
         '#task-table .task-table-body .checkbox.checkbox-hide > input + label { padding-left: 5px !important; }',
         '#task-table .task-table-body .checkbox.checkbox-hide > input + label:before, #task-table .task-table-body .checkbox.checkbox-hide > input + label:after { display: block !important; }'
-    ].join('\\n');
+    ].join('\n');
     document.head.appendChild(style);
 
     function stopRowToggle(event) {
