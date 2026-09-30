@@ -10,6 +10,7 @@ export PATH
 aria2pid=$(pgrep 'aria2c')
 ccaa_web_pid=$(pgrep 'ccaa_web')
 filebrowser_pid=$(pgrep 'filebrowser')
+ccaa_delete_api_pid=$(pgrep -f 'ccaa_delete_api.py')
 
 #设置aria2密码
 function pass(){
@@ -21,6 +22,7 @@ function ccaa_start(){
 	nohup aria2c --conf-path=/etc/ccaa/aria2.conf > /var/log/aria2.log 2>&1 &
 	nohup /usr/sbin/ccaa_web > /var/log/ccaa_web.log 2>&1 &
 	nohup filebrowser -c /etc/ccaa/config.json > /var/log/fbrun.log 2>&1 &
+	nohup /usr/bin/python3 /usr/sbin/ccaa_delete_api.py > /var/log/ccaa_delete_api.log 2>&1 &
 	sleep 3600d
 }
 
@@ -32,11 +34,13 @@ case $1 in
 		kill -9 ${aria2pid}
 		kill -9 ${ccaa_web_pid}
 		kill -9 ${filebrowser_pid}
+		kill -9 ${ccaa_delete_api_pid}
 	;;
 	'restart')
 		kill -9 ${aria2pid}
 		kill -9 ${ccaa_web_pid}
 		kill -9 ${filebrowser_pid}
+		kill -9 ${ccaa_delete_api_pid}
 		ccaa_start
 	;;
 	'status')
@@ -48,6 +52,7 @@ case $1 in
 				echo "Aria2 is running,pid is ${aria2pid}."
 				echo "AriaNg is running,pid is ${ccaa_web_pid}."
 				echo "Filebrowser is running,pid is ${filebrowser_pid}."
+				echo "Task file deletion API is running,pid is ${ccaa_delete_api_pid}."
 				echo '-----------------------------------------------'
 		fi
 	;;
