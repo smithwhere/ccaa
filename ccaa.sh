@@ -1,13 +1,13 @@
 #!/bin/bash
-#####	涓€閿畨瑁匜ile Browser + Aria2 + AriaNg		#####
-#####	浣滆€咃細xiaoz.me						#####
-#####	鏇存柊鏃堕棿锛?020-02-27				#####
+#####	一键安装File Browser + Aria2 + AriaNg		#####
+#####	作者：xiaoz.me						#####
+#####	更新时间：2020-02-27				#####
 
-#瀵煎叆鐜鍙橀噺
+#导入环境变量
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/bin:/sbin
 export PATH
 
-#CDN鍩熷悕璁剧疆
+#CDN域名设置
 if [ $1 = 'cdn' ]
 	then
 	aria2_url='http://soft.xiaoz.top/linux/aria2-1.35.0-linux-gnu-64bit-build1.tar.bz2'
@@ -21,44 +21,47 @@ if [ $1 = 'cdn' ]
 	ccaa_web_url='http://soft.xiaoz.org/linux/ccaa_web.tar.gz'
 fi
 
-#瀹夎鍓嶇殑妫€鏌?function check(){
+#安装前的检查
+function check(){
 	echo '-------------------------------------------------------------'
 	if [ -e "/etc/ccaa" ]
         then
-        echo 'CCAA宸茬粡瀹夎锛岃嫢闇€瑕侀噸鏂板畨瑁咃紝璇峰厛鍗歌浇鍐嶅畨瑁咃紒'
+        echo 'CCAA已经安装，若需要重新安装，请先卸载再安装！'
         echo '-------------------------------------------------------------'
         exit
 	else
-	        echo '妫€娴嬮€氳繃锛屽嵆灏嗗紑濮嬪畨瑁呫€?
+	        echo '检测通过，即将开始安装。'
 	        echo '-------------------------------------------------------------'
 	fi
 }
 
-#瀹夎涔嬪墠鐨勫噯澶?function setout(){
+#安装之前的准备
+function setout(){
 	if [ -e "/usr/bin/yum" ]
 	then
 		yum -y install curl gcc make bzip2 gzip wget unzip tar
 	else
-		#鏇存柊杞欢锛屽惁鍒欏彲鑳絤ake鍛戒护鏃犳硶瀹夎
+		#更新软件，否则可能make命令无法安装
 		sudo apt-get update
 		sudo apt-get install -y curl make bzip2 gzip wget unzip sudo
 	fi
-	#鍒涘缓涓存椂鐩綍
+	#创建临时目录
 	cd
 	mkdir ./ccaa_tmp
-	#鍒涘缓鐢ㄦ埛鍜岀敤鎴风粍
+	#创建用户和用户组
 	groupadd ccaa
 	useradd -M -g ccaa ccaa -s /sbin/nologin
 }
-#瀹夎Aria2
+#安装Aria2
 function install_aria2(){
-	#浼樺厛瀹夎闈欐€佺紪璇戠増鏈紝涓嬭浇鎴栫紪璇戝け璐ユ椂鍥為€€鍒扮郴缁熻蒋浠跺寘銆?	cd "$HOME/ccaa_tmp" || return 1
+	#优先安装静态编译版本，下载或编译失败时回退到系统软件包。
+	cd "$HOME/ccaa_tmp" || return 1
 	if wget -c "${aria2_url}" && \
 		tar -xjf aria2-1.35.0-linux-gnu-64bit-build1.tar.bz2 && \
 		(cd aria2-1.35.0-linux-gnu-64bit-build1 && make install); then
 		:
 	else
-		echo '闈欐€佺増 aria2 瀹夎澶辫触锛屽皾璇曚娇鐢ㄧ郴缁熻蒋浠跺寘銆?
+		echo '静态版 aria2 安装失败，尝试使用系统软件包。'
 	fi
 
 	if ! command -v aria2c >/dev/null 2>&1; then
@@ -69,46 +72,47 @@ function install_aria2(){
 		elif command -v yum >/dev/null 2>&1; then
 			yum install -y aria2 || return 1
 		else
-			echo '鎵句笉鍒版敮鎸佺殑杞欢鍖呯鐞嗗櫒锛屾棤娉曞畨瑁?aria2銆? >&2
+			echo '找不到支持的软件包管理器，无法安装 aria2。' >&2
 			return 1
 		fi
 	fi
 
 	if ! command -v aria2c >/dev/null 2>&1; then
-		echo 'aria2 瀹夎鍚庝粛鏃犳硶鎵惧埌 aria2c锛屽仠姝㈠畨瑁呫€? >&2
+		echo 'aria2 安装后仍无法找到 aria2c，停止安装。' >&2
 		return 1
 	fi
 	cd "$HOME"
 }
 
-#瀹夎File Browser鏂囦欢绠＄悊鍣?function install_file_browser(){
+#安装File Browser文件管理器
+function install_file_browser(){
 	cd ./ccaa_tmp
-	#涓嬭浇File Browser
+	#下载File Browser
 	wget ${filebrowser_url}
-	#瑙ｅ帇
+	#解压
 	tar -zxvf linux-amd64-filebrowser.tar.gz
-	#绉诲姩浣嶇疆
+	#移动位置
 	mv filebrowser /usr/sbin
 	cd
 }
-#澶勭悊閰嶇疆鏂囦欢
+#处理配置文件
 function dealconf(){
 	cd ./ccaa_tmp
-	#涓嬭浇CCAA椤圭洰
+	#下载CCAA项目
 	wget ${master_url}
-	#瑙ｅ帇
+	#解压
 	unzip master.zip
-	#澶嶅埗CCAA鏍稿績鐩綍
+	#复制CCAA核心目录
 	mv ccaa-master/ccaa_dir /etc/ccaa
-	#鍒涘缓aria2鏃ュ織鏂囦欢
+	#创建aria2日志文件
 	touch /var/log/aria2.log
-	#upbt澧炲姞鎵ц鏉冮檺
+	#upbt增加执行权限
 	chmod +x /etc/ccaa/upbt.sh
 	chmod +x ccaa-master/ccaa
 	cp ccaa-master/ccaa /usr/sbin
 	cd
 }
-#鑷姩鏀捐绔彛
+#自动放行端口
 function chk_firewall(){
 	if [ -e "/etc/sysconfig/iptables" ]
 	then
@@ -136,7 +140,7 @@ function chk_firewall(){
 		sudo ufw allow 51413/tcp
 	fi
 }
-#鍒犻櫎绔彛
+#删除端口
 function del_post() {
 	if [ -e "/etc/sysconfig/iptables" ]
 	then
@@ -164,7 +168,7 @@ function del_post() {
 		sudo ufw delete 51413/tcp
 	fi
 }
-#娣诲姞鏈嶅姟
+#添加服务
 function add_service() {
 	if [ -d "/etc/systemd/system" ]
 	then
@@ -172,67 +176,69 @@ function add_service() {
 		systemctl daemon-reload
 	fi
 }
-#璁剧疆璐﹀彿瀵嗙爜
+#设置账号密码
 function setting(){
 	cd
 	cd ./ccaa_tmp
 	echo '-------------------------------------------------------------'
-	read -p "璁剧疆涓嬭浇璺緞锛堣濉啓缁濆鍦板潃锛岄粯璁?data/ccaaDown锛?" downpath
-	read -p "Aria2 RPC 瀵嗛挜:(瀛楁瘝鎴栨暟瀛楃粍鍚堬紝涓嶈鍚湁鐗规畩瀛楃):" secret
-	#濡傛灉Aria2瀵嗛挜涓虹┖
+	read -p "设置下载路径（请填写绝对地址，默认/data/ccaaDown）:" downpath
+	read -p "Aria2 RPC 密钥:(字母或数字组合，不要含有特殊字符):" secret
+	#如果Aria2密钥为空
 	while [ -z "${secret}" ]
 	do
-		read -p "Aria2 RPC 瀵嗛挜:(瀛楁瘝鎴栨暟瀛楃粍鍚堬紝涓嶈鍚湁鐗规畩瀛楃):" secret
+		read -p "Aria2 RPC 密钥:(字母或数字组合，不要含有特殊字符):" secret
 	done
 	
-	#濡傛灉涓嬭浇璺緞涓虹┖锛岃缃粯璁や笅杞借矾寰?	if [ -z "${downpath}" ]
+	#如果下载路径为空，设置默认下载路径
+	if [ -z "${downpath}" ]
 	then
 		downpath='/data/ccaaDown'
 	fi
 
-	#鑾峰彇ip
+	#获取ip
 	osip=$(curl ipv4.ip.sb)
 	
-	#鎵ц鏇挎崲鎿嶄綔
+	#执行替换操作
 	mkdir -p ${downpath}
 	sed -i "s%dir=%dir=${downpath}%g" /etc/ccaa/aria2.conf
 	sed -i "s/rpc-secret=/rpc-secret=${secret}/g" /etc/ccaa/aria2.conf
-	#鏇挎崲filebrowser璇诲彇璺緞
+	#替换filebrowser读取路径
 	sed -i "s%ccaaDown%${downpath}%g" /etc/ccaa/config.json
-	#鏇挎崲AriaNg鏈嶅姟鍣ㄩ摼鎺?	sed -i "s/server_ip/${osip}/g" /etc/ccaa/AriaNg/index.html
+	#替换AriaNg服务器链接
+	sed -i "s/server_ip/${osip}/g" /etc/ccaa/AriaNg/index.html
 	
-	#鏇存柊tracker
+	#更新tracker
 	bash /etc/ccaa/upbt.sh
 	
-	#瀹夎AriaNg
+	#安装AriaNg
 	wget ${ccaa_web_url}
 	tar -zxvf ccaa_web.tar.gz
 	cp ccaa_web /usr/sbin/
 	chmod +x /usr/sbin/ccaa_web
 
-	#鍚姩鏈嶅姟
+	#启动服务
 	nohup sudo -u ccaa aria2c --conf-path=/etc/ccaa/aria2.conf > /var/log/aria2.log 2>&1 &
 	#nohup caddy -conf="/etc/ccaa/caddy.conf" > /etc/ccaa/caddy.log 2>&1 &
 	nohup sudo -u ccaa /usr/sbin/ccaa_web > /var/log/ccaa_web.log 2>&1 &
-	#杩愯filebrowser
+	#运行filebrowser
 	nohup sudo -u ccaa filebrowser -c /etc/ccaa/config.json > /var/log/fbrun.log 2>&1 &
 
-	#閲嶇疆鏉冮檺
+	#重置权限
 	chown -R ccaa:ccaa /etc/ccaa/
 	chown -R ccaa:ccaa ${downpath}
 
-	#娉ㄥ唽鏈嶅姟
+	#注册服务
 	add_service
 
 	echo '-------------------------------------------------------------'
-	echo "澶у姛鍛婃垚锛岃璁块棶: http://${osip}:6080/"
-	echo 'File Browser 鐢ㄦ埛鍚?ccaa'
-	echo 'File Browser 瀵嗙爜:admin'
-	echo 'Aria2 RPC 瀵嗛挜:' ${secret}
-	echo '甯姪鏂囨。: https://dwz.ovh/ccaa 锛堝繀鐪嬶級' 
+	echo "大功告成，请访问: http://${osip}:6080/"
+	echo 'File Browser 用户名:ccaa'
+	echo 'File Browser 密码:admin'
+	echo 'Aria2 RPC 密钥:' ${secret}
+	echo '帮助文档: https://dwz.ovh/ccaa （必看）' 
 	echo '-------------------------------------------------------------'
 }
-#娓呯悊宸ヤ綔
+#清理工作
 function cleanup(){
 	cd
 	rm -rf ccaa_tmp
@@ -240,19 +246,19 @@ function cleanup(){
 	#rm -rf init
 }
 
-#鍗歌浇
+#卸载
 function uninstall(){
 	wget -O ccaa-uninstall.sh https://raw.githubusercontent.com/helloxz/ccaa/master/uninstall.sh
 	bash ccaa-uninstall.sh
 }
 
-#閫夋嫨瀹夎鏂瑰紡
+#选择安装方式
 echo "------------------------------------------------"
-echo "Linux + File Browser + Aria2 + AriaNg涓€閿畨瑁呰剼鏈?CCAA)"
-echo "1) 瀹夎CCAA"
-echo "2) 鍗歌浇CCAA"
-echo "3) 鏇存柊bt-tracker"
-echo "q) 閫€鍑猴紒"
+echo "Linux + File Browser + Aria2 + AriaNg一键安装脚本(CCAA)"
+echo "1) 安装CCAA"
+echo "2) 卸载CCAA"
+echo "3) 更新bt-tracker"
+echo "q) 退出！"
 read -p ":" istype
 case $istype in
     1) 
@@ -274,6 +280,5 @@ case $istype in
     q) 
     	exit
     ;;
-    *) echo '鍙傛暟閿欒锛?
+    *) echo '参数错误！'
 esac
-
