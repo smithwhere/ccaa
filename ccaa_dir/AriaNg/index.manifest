@@ -23,4 +23,4 @@ NETWORK:
 SETTINGS:
 prefer-online
 
-# CCAA tracker refresh support
+# CCAA task deletion recursively removes task folders
