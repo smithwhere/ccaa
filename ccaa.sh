@@ -66,11 +66,11 @@ function install_aria2(){
 
 	if ! command -v aria2c >/dev/null 2>&1; then
 		if command -v apt-get >/dev/null 2>&1; then
-			apt-get update && apt-get install -y aria2 || return 1
+			apt-get update && apt-get install --reinstall -y aria2 || return 1
 		elif command -v dnf >/dev/null 2>&1; then
-			dnf install -y aria2 || return 1
+			dnf reinstall -y aria2 || dnf install -y aria2 || return 1
 		elif command -v yum >/dev/null 2>&1; then
-			yum install -y aria2 || return 1
+			yum reinstall -y aria2 || yum install -y aria2 || return 1
 		else
 			echo '找不到支持的软件包管理器，无法安装 aria2。' >&2
 			return 1
