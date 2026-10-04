@@ -47,10 +47,12 @@ function setout(){
 	fi
 	#创建临时目录
 	cd
-	mkdir ./ccaa_tmp
-	#创建用户和用户组
-	groupadd ccaa
-	useradd -M -g ccaa ccaa -s /sbin/nologin
+	mkdir -p ./ccaa_tmp
+	#创建用户和用户组（允许在安装中断后重试）
+	getent group ccaa >/dev/null 2>&1 || groupadd ccaa
+	if ! id -u ccaa >/dev/null 2>&1; then
+		useradd -M -g ccaa ccaa -s /sbin/nologin
+	fi
 }
 #安装Aria2
 function install_aria2(){
