@@ -17,6 +17,7 @@ LISTEN_HOST = "0.0.0.0"
 LISTEN_PORT = 6082
 MAX_BODY_SIZE = 65536
 GID_PATTERN = re.compile(r"^[0-9a-fA-F]{16}$")
+INFO_HASH_PATTERN = re.compile(r"^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$")
 
 
 class ApiError(Exception):
@@ -121,7 +122,7 @@ def task_parent_directory(path, root):
 
 
 def delete_task_and_files(config, gid):
-    task = rpc_call(config, "tellStatus", gid, ["gid", "status", "files"])
+    task = rpc_call(config, "tellStatus", gid, ["gid", "status", "files", "infoHash"])
     if not isinstance(task, dict) or task.get("gid") != gid:
         raise ApiError("aria2 did not return the requested task")
 
@@ -143,6 +144,20 @@ def delete_task_and_files(config, gid):
             if control_file and control_file not in seen:
                 paths.append(control_file)
                 seen.add(control_file)
+
+    # aria2 keeps magnet-link metadata outside the download file list as
+    # <infoHash>.torrent when bt-save-metadata is enabled.
+    info_hash = task.get("infoHash", "")
+    if info_hash:
+        if not INFO_HASH_PATTERN.fullmatch(info_hash):
+            raise ApiError("aria2 returned an invalid torrent info hash")
+        metadata_path = validate_task_file(
+            os.path.join(config["download_root"], info_hash.lower() + ".torrent"),
+            config["download_root"],
+        )
+        if metadata_path and metadata_path not in seen:
+            paths.append(metadata_path)
+            seen.add(metadata_path)
 
     status = task.get("status")
     if status in ("active", "waiting", "paused"):
