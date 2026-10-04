@@ -1,7 +1,9 @@
 CACHE MANIFEST
+# AriaNg text selection override v1
 
 CACHE:
 css/aria-ng-70e1362684.min.css
+css/ccaa-user-selection.css
 css/bootstrap-3.4.1.min.css
 css/plugins-ccac6fc3fc.min.css
 js/angular-packages-1.6.10.min.js
