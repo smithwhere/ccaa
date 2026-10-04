@@ -22,11 +22,7 @@ fetch_list() {
 fetched=0
 for url in \
 	'https://cf.trackerslist.com/best.txt' \
-	'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt' \
-	'https://tracker.adysec.com/trackers_best_http.txt' \
-	'https://tracker.adysec.com/trackers_best_https.txt' \
-	'https://tracker.adysec.com/trackers_best_udp.txt' \
-	'https://tracker.adysec.com/trackers_best_wss.txt'; do
+	'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt'; do
 	if fetch_list "$url" "$TMP_DIR/source"; then
 		cat "$TMP_DIR/source" >> "$TMP_DIR/all"
 		fetched=1
