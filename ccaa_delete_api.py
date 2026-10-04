@@ -122,7 +122,7 @@ def task_parent_directory(path, root):
 
 
 def delete_task_and_files(config, gid):
-    task = rpc_call(config, "tellStatus", gid, ["gid", "status", "files", "infoHash"])
+    task = rpc_call(config, "tellStatus", gid, ["gid", "status", "files", "infoHash", "dir"])
     if not isinstance(task, dict) or task.get("gid") != gid:
         raise ApiError("aria2 did not return the requested task")
 
@@ -151,13 +151,18 @@ def delete_task_and_files(config, gid):
     if info_hash:
         if not INFO_HASH_PATTERN.fullmatch(info_hash):
             raise ApiError("aria2 returned an invalid torrent info hash")
+        task_dir = task.get("dir") or config["download_root"]
         metadata_path = validate_task_file(
-            os.path.join(config["download_root"], info_hash.lower() + ".torrent"),
+            os.path.join(task_dir, info_hash.lower() + ".torrent"),
             config["download_root"],
         )
         if metadata_path and metadata_path not in seen:
             paths.append(metadata_path)
             seen.add(metadata_path)
+            metadata_control_file = validate_task_file(metadata_path + ".aria2", config["download_root"])
+            if metadata_control_file and metadata_control_file not in seen:
+                paths.append(metadata_control_file)
+                seen.add(metadata_control_file)
 
     status = task.get("status")
     if status in ("active", "waiting", "paused"):
