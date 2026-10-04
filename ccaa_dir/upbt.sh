@@ -22,7 +22,9 @@ fetch_list() {
 fetched=0
 for url in \
 	'https://cf.trackerslist.com/best.txt' \
-	'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt'; do
+	'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt' \
+	'https://raw.githubusercontent.com/XIU2/TrackersListCollection/refs/heads/master/all_aria2.txt' \
+	'https://raw.githubusercontent.com/XIU2/TrackersListCollection/refs/heads/master/best_aria2.txt'; do
 	if fetch_list "$url" "$TMP_DIR/source"; then
 		cat "$TMP_DIR/source" >> "$TMP_DIR/all"
 		fetched=1
@@ -34,11 +36,15 @@ done
 TRACKERS=$(awk '
 	{
 		gsub(/\r/, "")
-		gsub(/^[ \t]+|[ \t]+$/, "")
-	}
-	/^(http|https|udp|ws|wss):\/\// && !seen[$0]++ {
-		if (count++) printf ","
-		printf "%s", $0
+		n = split($0, items, /[, \t]+/)
+		for (i = 1; i <= n; i++) {
+			tracker = items[i]
+			gsub(/^[ \t]+|[ \t]+$/, "", tracker)
+			if (tracker ~ /^(http|https|udp|ws|wss):\/\// && !seen[tracker]++) {
+				if (count++) printf ","
+				printf "%s", tracker
+			}
+		}
 	}
 	END { if (count) printf "\n" }
 ' "$TMP_DIR/all")
