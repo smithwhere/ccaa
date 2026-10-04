@@ -245,6 +245,7 @@ function setting(){
 
 	echo '-------------------------------------------------------------'
 	echo "大功告成，请访问: http://${osip}:6080/"
+	echo "File Browser 地址: http://${osip}:6081/"
 	echo '请在浏览器中打开以下 AriaNg 自动配置链接：'
 	echo 'AriaNg 会自动保存生成的 RPC 密钥并重新载入页面。'
 	echo "${ariang_rpc_url}"
