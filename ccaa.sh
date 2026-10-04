@@ -10,12 +10,12 @@ export PATH
 #CDN域名设置
 if [ $1 = 'cdn' ]
 	then
-	aria2_url='http://soft.xiaoz.top/linux/aria2-1.35.0-linux-gnu-64bit-build1.tar.bz2'
+	aria2_url='http://soft.xiaoz.top/linux/aria2-1.37.0-linux-gnu-64bit-build1.tar.bz2'
 	filebrowser_url='http://soft.xiaoz.top/linux/linux-amd64-filebrowser.tar.gz'
 	master_url='https://github.com/smithwhere/ccaa/archive/refs/heads/master.zip'
 	ccaa_web_url='http://soft.xiaoz.top/linux/ccaa_web.tar.gz'
 	else
-	aria2_url='https://github.com/q3aql/aria2-static-builds/releases/download/v1.35.0/aria2-1.35.0-linux-gnu-64bit-build1.tar.bz2'
+	aria2_url='https://github.com/dmesg00/aria2-static-builds/releases/download/v1.37.0/aria2-1.37.0-linux-gnu-64bit-build1.tar.bz2'
 	filebrowser_url='https://github.com/filebrowser/filebrowser/releases/download/v2.0.16/linux-amd64-filebrowser.tar.gz'
 	master_url='https://github.com/smithwhere/ccaa/archive/refs/heads/master.zip'
 	ccaa_web_url='http://soft.xiaoz.org/linux/ccaa_web.tar.gz'
@@ -57,8 +57,8 @@ function install_aria2(){
 	#优先安装静态编译版本，下载或编译失败时回退到系统软件包。
 	cd "$HOME/ccaa_tmp" || return 1
 	if wget -c "${aria2_url}" && \
-		tar -xjf aria2-1.35.0-linux-gnu-64bit-build1.tar.bz2 && \
-		(cd aria2-1.35.0-linux-gnu-64bit-build1 && make install); then
+		tar -xjf aria2-1.37.0-linux-gnu-64bit-build1.tar.bz2 && \
+		(cd aria2-1.37.0-linux-gnu-64bit-build1 && make install); then
 		:
 	else
 		echo '静态版 aria2 安装失败，尝试使用系统软件包。'
