@@ -145,6 +145,20 @@ def delete_task_and_files(config, gid):
                 paths.append(control_file)
                 seen.add(control_file)
 
+    # aria2 stores a multi-file task's control file next to its output
+    # directory (for example, jbd-313.aria2 beside the jbd-313 folder).
+    task_folder = None
+    if task_directories:
+        try:
+            task_folder = os.path.commonpath(sorted(task_directories))
+        except ValueError:
+            task_folder = config["download_root"]
+        if task_folder != config["download_root"]:
+            folder_control_file = validate_task_file(task_folder + ".aria2", config["download_root"])
+            if folder_control_file and folder_control_file not in seen:
+                paths.append(folder_control_file)
+                seen.add(folder_control_file)
+
     # aria2 keeps magnet-link metadata outside the download file list as
     # <infoHash>.torrent when bt-save-metadata is enabled.
     info_hash = task.get("infoHash", "")
@@ -186,20 +200,15 @@ def delete_task_and_files(config, gid):
     # Remove only the deepest shared task directory. Never walk up to a broader
     # directory that could contain downloads belonging to other tasks.
     deleted_folders = 0
-    if task_directories:
-        try:
-            directory = os.path.commonpath(sorted(task_directories))
-        except ValueError:
-            directory = config["download_root"]
+    if task_folder and task_folder != config["download_root"]:
         try:
             if (
-                directory != config["download_root"]
-                and not os.path.islink(directory)
-                and os.path.realpath(directory) == directory
-                and is_within_root(directory, config["download_root"])
-                and os.path.isdir(directory)
+                not os.path.islink(task_folder)
+                and os.path.realpath(task_folder) == task_folder
+                and is_within_root(task_folder, config["download_root"])
+                and os.path.isdir(task_folder)
             ):
-                shutil.rmtree(directory)
+                shutil.rmtree(task_folder)
                 deleted_folders += 1
         except FileNotFoundError:
             pass
