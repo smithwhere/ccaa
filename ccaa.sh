@@ -249,7 +249,7 @@ function setting(){
 	echo '请在浏览器中打开以下 AriaNg 自动配置链接：'
 	echo 'AriaNg 会自动保存生成的 RPC 密钥并重新载入页面。'
 	echo "${ariang_rpc_url}"
-	echo 'File Browser 用户名:ccaa'
+	echo 'File Browser 用户名:admin'
 	echo 'File Browser 密码:admin'
 	echo 'Aria2 RPC 密钥:' ${secret}
 	echo '帮助文档: https://dwz.ovh/ccaa （必看）' 
