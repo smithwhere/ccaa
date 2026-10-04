@@ -122,7 +122,7 @@ def task_parent_directory(path, root):
 
 
 def delete_task_and_files(config, gid):
-    task = rpc_call(config, "tellStatus", gid, ["gid", "status", "files", "infoHash", "dir"])
+    task = rpc_call(config, "tellStatus", gid, ["gid", "status", "files", "infoHash", "dir", "bittorrent"])
     if not isinstance(task, dict) or task.get("gid") != gid:
         raise ApiError("aria2 did not return the requested task")
 
@@ -159,13 +159,32 @@ def delete_task_and_files(config, gid):
                 paths.append(folder_control_file)
                 seen.add(folder_control_file)
 
+    task_dir = task.get("dir") or config["download_root"]
+    torrent_info = (task.get("bittorrent") or {}).get("info") or {}
+    torrent_name = torrent_info.get("name", "")
+    # Some aria2 layouts keep the task-level control file next to the torrent's
+    # info.name directory, even when the returned file paths are rooted directly
+    # in the download directory.
+    if (
+        isinstance(torrent_name, str)
+        and torrent_name not in ("", ".", "..")
+        and "/" not in torrent_name
+        and "\\" not in torrent_name
+    ):
+        named_control_file = validate_task_file(
+            os.path.join(task_dir, torrent_name + ".aria2"),
+            config["download_root"],
+        )
+        if named_control_file and named_control_file not in seen:
+            paths.append(named_control_file)
+            seen.add(named_control_file)
+
     # aria2 keeps magnet-link metadata outside the download file list as
     # <infoHash>.torrent when bt-save-metadata is enabled.
     info_hash = task.get("infoHash", "")
     if info_hash:
         if not INFO_HASH_PATTERN.fullmatch(info_hash):
             raise ApiError("aria2 returned an invalid torrent info hash")
-        task_dir = task.get("dir") or config["download_root"]
         metadata_path = validate_task_file(
             os.path.join(task_dir, info_hash.lower() + ".torrent"),
             config["download_root"],
