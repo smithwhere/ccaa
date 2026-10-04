@@ -248,6 +248,7 @@ function setting(){
 	echo "${ariang_rpc_url}"
 	echo 'File Browser 用户名:ccaa'
 	echo 'File Browser 密码:admin'
+	echo 'Aria2 RPC 密钥:' ${secret}
 	echo '帮助文档: https://dwz.ovh/ccaa （必看）' 
 	echo '-------------------------------------------------------------'
 }
